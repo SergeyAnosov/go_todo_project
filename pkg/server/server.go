@@ -17,7 +17,7 @@ func Run() error {
 	http.Handle("/", http.FileServer(http.Dir("/web")))
 
 	addr := os.Getenv("SERVER_ADDRESS")
-	port, err := strconv.Atoi(os.Getenv("TODO_PORT"))
+	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
 	if err != nil {
 		panic(err)
 	}
