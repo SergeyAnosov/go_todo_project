@@ -1,4 +1,4 @@
-module sergeyanosov/go_todo_project
+module github.com/SergeyAnosov/go_todo_project
 
 go 1.23.4
 

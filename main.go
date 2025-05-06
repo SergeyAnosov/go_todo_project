@@ -1,7 +1,15 @@
 package main
 
-import "sergeyanosov/go_todo_project/server"
+import (
+	"fmt"
+	"sergeyanosov/go_todo_project/pkg/server"
+)
 
 func main() {
-	server.Start()
+	err := server.Run()
+	if err != nil {
+		fmt.Println("Завершаем работу")
+		fmt.Println(err)
+		panic(err)
+	}
 }
