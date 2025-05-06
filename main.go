@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"sergeyanosov/go_todo_project/pkg/server"
+
+	"github.com/sergeyanosov/go_todo_project/pkg/server"
 )
 
 func main() {
