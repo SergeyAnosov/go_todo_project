@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/sergeyanosov/go_todo_project/pkg/server"
+	"go1f/pkg/server"
 )
 
 func main() {

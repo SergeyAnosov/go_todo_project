@@ -7,6 +7,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.10.0
 	modernc.org/sqlite v1.37.0
+	go1f v0.0.0	
 )
 
 require (
@@ -24,3 +25,7 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.9.1 // indirect
 )
+
+replace go1f => ./
+
+require go1f v0.0.0
