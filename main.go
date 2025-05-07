@@ -25,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	err1 := server.Run("/web", os.Getenv("SERVER_ADDRESS"), port)
+	err1 := server.Run("web", os.Getenv("SERVER_ADDRESS"), port)
 	if err1 != nil {
 		fmt.Println("Завершаем работу")
 		fmt.Println(err1)
