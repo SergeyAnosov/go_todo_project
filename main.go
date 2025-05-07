@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"go1f/pkg/server"
 
@@ -13,13 +14,18 @@ import (
 
 func main() {
 	godotenv.Load()
-	dbFile := os.Getenv("DB_PATH")
-	err := db.Init(dbFile)
+
+	err := db.Init(os.Getenv("DB_PATH"))
 	if err != nil {
 		panic(err)
 	}
 
-	err1 := server.Run()
+	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		panic(err)
+	}
+
+	err1 := server.Run("/web", os.Getenv("SERVER_ADDRESS"), port)
 	if err1 != nil {
 		fmt.Println("Завершаем работу")
 		fmt.Println(err1)
