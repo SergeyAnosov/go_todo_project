@@ -41,6 +41,7 @@ func Init(dbFile string) error {
 			panic("не удалось выполнить скрипт" + err2.Error())
 		}
 	} else {
+		fmt.Println("База уже существует. Продолжаем")
 	}
 
 	return nil
