@@ -5,9 +5,9 @@ import (
 	"os"
 	"strconv"
 
-	"go1f/pkg/server"
+	"github.com/sergeyanosov/go_todo_project/pkg/server"
 
-	"go1f/pkg/db"
+	"github.com/sergeyanosov/go_todo_project/pkg/db"
 
 	"github.com/joho/godotenv"
 )
