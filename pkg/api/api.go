@@ -1,11 +1,11 @@
 package api
 
 import (
-	"net/http"
-
-	"github.com/sergeyanosov/go_todo_project/pkg"
+	"github.com/go-chi/chi/v5"
+	"github.com/sergeyanosov/go_todo_project/pkg/server/handlers"
 )
 
-func Init() {
-	http.HandleFunc("/api/nextdate", pkg.NextDayHandler)
+func Init(r *chi.Mux) {
+	r.Get("/api/nextdate", handlers.NextDayHandler)
+	r.Post("/api/task", handlers.AddTaskHandle)
 }

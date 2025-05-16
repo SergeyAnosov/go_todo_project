@@ -13,9 +13,12 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		return
+	}
 
-	err := db.Init(os.Getenv("DB_PATH"))
+	err = db.Init(os.Getenv("DB_PATH"))
 	if err != nil {
 		panic(err)
 	}
