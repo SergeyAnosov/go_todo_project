@@ -77,7 +77,7 @@ func checkDate(task *db.Task) error {
 		return err
 	}
 
-	if afterNow(now, t) {
+	if afterNow(now.Truncate(24*time.Hour), t) {
 		fmt.Printf("afternow is %v\n", afterNow(now, t))
 		if len(task.Repeat) == 0 {
 			task.Date = now.Format("20060102")
