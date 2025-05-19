@@ -12,7 +12,7 @@ import (
 var format = "20060102"
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
-	if repeat == "" {
+	if len(repeat) == 0 {
 		return "", nil
 	}
 	if strings.Contains(repeat, "w ") || strings.Contains(repeat, "m ") {
@@ -69,13 +69,13 @@ func NextDayHandler(response http.ResponseWriter, request *http.Request) {
 	query := request.URL.Query()
 	dstart := query.Get("date")
 	repeat := query.Get("repeat")
-	nowFromQuerry := query.Get("now")
+	nowFromQuery := query.Get("now")
 	var now time.Time
 	var err error
-	if nowFromQuerry == "" {
+	if len(nowFromQuery) == 0 {
 		now = time.Now()
 	} else {
-		now, err = time.Parse(format, nowFromQuerry)
+		now, err = time.Parse(format, nowFromQuery)
 		if err != nil {
 			http.Error(response, err.Error(), http.StatusBadRequest)
 			now = time.Now()
@@ -89,5 +89,6 @@ func NextDayHandler(response http.ResponseWriter, request *http.Request) {
 	}
 
 	response.Header().Add("Content-Type", "text/plain")
-	fmt.Fprintf(response, "%s", date)
+	response.Write([]byte(date))
+	//fmt.Fprintf(response, "%s", date)
 }

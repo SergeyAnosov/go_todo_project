@@ -6,6 +6,7 @@ import (
 	"github.com/sergeyanosov/go_todo_project/pkg/db"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
-		http.Error(writer, "Ошибка чтения тела запроса", http.StatusBadRequest)
+		SendError(writer, "ошибка чтения тела запроса", http.StatusBadRequest)
 		return
 	}
 	defer request.Body.Close()
@@ -23,28 +24,31 @@ func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 
 	err = json.Unmarshal(body, &task)
 	if err != nil {
-		fmt.Printf("Ошибка десереализации:%s\n", err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		SendError(writer, "ошибка десереализации: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if checkTitleIsEmpty(&task) {
-		err = fmt.Errorf("поле Title не задано")
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		err = fmt.Errorf("не указан заголовок задачи")
+		SendError(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = checkDate(&task)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		SendError(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	lastTaskId, err := db.AddTask(&task)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		SendError(writer, err.Error(), http.StatusBadRequest)
 	}
-	writeJson(writer, lastTaskId)
+	writeJson(writer, struct {
+		ID string `json:"id"`
+	}{
+		ID: strconv.FormatInt(lastTaskId, 10),
+	})
 }
 
 func checkTitleIsEmpty(task *db.Task) bool {
@@ -57,22 +61,20 @@ func checkTitleIsEmpty(task *db.Task) bool {
 
 func checkDate(task *db.Task) error {
 	now := time.Now()
-	if task.Date == "" {
+	if len(task.Date) == 0 {
 		task.Date = now.Format("20060102")
 	}
 	t, err := time.Parse("20060102", task.Date)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	next, err := NextDate(now, task.Date, task.Repeat)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
-	if now.After(t) {
+	if afterNow(now, t) {
 		if len(task.Repeat) == 0 {
 			task.Date = now.Format("20060102")
 		} else {
@@ -82,11 +84,10 @@ func checkDate(task *db.Task) error {
 	return nil
 }
 func writeJson(w http.ResponseWriter, data any) {
-	out, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		// Если произошла ошибка при кодировании JSON — отправляем Internal Server Error
+		http.Error(w, `{"error":"Ошибка при сериализации данных"}`, http.StatusInternalServerError)
+	}
 }
