@@ -65,16 +65,20 @@ func checkDate(task *db.Task) error {
 		task.Date = now.Format("20060102")
 	}
 	t, err := time.Parse("20060102", task.Date)
+	fmt.Printf("t: %s\n", t)
 	if err != nil {
 		return err
 	}
 
 	next, err := NextDate(now, task.Date, task.Repeat)
+	fmt.Printf("next: %s\n", next)
+	fmt.Printf("now: %s\n", now)
 	if err != nil {
 		return err
 	}
 
 	if afterNow(now, t) {
+		fmt.Printf("afternow is %v\n", afterNow(now, t))
 		if len(task.Repeat) == 0 {
 			task.Date = now.Format("20060102")
 		} else {
