@@ -12,7 +12,6 @@ import (
 
 func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 	var task db.Task
-	fmt.Println("test")
 
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
@@ -88,7 +87,7 @@ func checkDate(task *db.Task) error {
 	}
 	return nil
 }
-func writeJson(w http.ResponseWriter, data any) {
+func WriteJson(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
