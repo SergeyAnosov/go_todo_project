@@ -12,6 +12,7 @@ import (
 
 func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 	var task db.Task
+	fmt.Println("test")
 
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
