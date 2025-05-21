@@ -44,7 +44,7 @@ func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		SendError(writer, err.Error(), http.StatusBadRequest)
 	}
-	writeJson(writer, struct {
+	WriteJson(writer, struct {
 		ID string `json:"id"`
 	}{
 		ID: strconv.FormatInt(lastTaskId, 10),
@@ -94,4 +94,22 @@ func WriteJson(w http.ResponseWriter, data any) {
 		// Если произошла ошибка при кодировании JSON — отправляем Internal Server Error
 		http.Error(w, `{"error":"Ошибка при сериализации данных"}`, http.StatusInternalServerError)
 	}
+}
+
+type TasksResp struct {
+	Tasks []*db.Task `json:"tasks"`
+}
+
+func TasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks, err := db.Tasks(50) // в параметре максимальное количество записей
+	if err != nil {
+		// здесь вызываете функцию, которая возвращает ошибку в JSON
+		// её желательно было реализовать на предыдущем шаге
+		// ...
+		SendError(w, "ошибка получения всех задач", http.StatusInternalServerError)
+		return
+	}
+	WriteJson(w, TasksResp{
+		Tasks: tasks,
+	})
 }

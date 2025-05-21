@@ -9,9 +9,9 @@ import (
 
 func Run(webDir, url string, port int) error {
 	r := chi.NewRouter()
-	http.Handle("/", http.FileServer(http.Dir(webDir)))
+	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(webDir))))
 	api.Init(r)
 	schema := fmt.Sprintf("%s:%d", url, port)
-	fmt.Println("Запускаем сервер")
+	fmt.Printf("Запускаем сервер по адесу %s\n", schema)
 	return http.ListenAndServe(schema, r)
 }
