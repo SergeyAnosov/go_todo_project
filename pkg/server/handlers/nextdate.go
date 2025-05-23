@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -61,11 +60,6 @@ func afterNow(date, now time.Time) bool {
 }
 
 func NextDayHandler(response http.ResponseWriter, request *http.Request) {
-	s := fmt.Sprintf("Method: %s\nHost: %s\nPath: %s\nQuery: %s\n",
-		request.Method, request.Host, request.URL.Path, request.URL.Query())
-
-	fmt.Println(s)
-
 	query := request.URL.Query()
 	dstart := query.Get("date")
 	repeat := query.Get("repeat")
@@ -90,5 +84,4 @@ func NextDayHandler(response http.ResponseWriter, request *http.Request) {
 
 	response.Header().Add("Content-Type", "text/plain")
 	response.Write([]byte(date))
-	//fmt.Fprintf(response, "%s", date)
 }

@@ -9,4 +9,6 @@ func Init(r *chi.Mux) {
 	r.Get("/api/nextdate", handlers.NextDayHandler)
 	r.Post("/api/task", handlers.AddTaskHandle)
 	r.Get("/api/tasks", handlers.TasksHandler)
+	r.Get("/api/task", handlers.GetTaskHandler)
+	r.Put("/api/task", handlers.UpdateTaskHandler)
 }

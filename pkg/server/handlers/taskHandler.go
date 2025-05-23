@@ -20,11 +20,9 @@ func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 	}
 	defer request.Body.Close()
 
-	fmt.Printf("body: %s\n", string(body))
-
 	err = json.Unmarshal(body, &task)
 	if err != nil {
-		SendError(writer, "ошибка десереализации: "+err.Error(), http.StatusBadRequest)
+		SendError(writer, "ошибка десереализации", http.StatusBadRequest)
 		return
 	}
 
@@ -65,20 +63,16 @@ func checkDate(task *db.Task) error {
 		task.Date = now.Format("20060102")
 	}
 	t, err := time.Parse("20060102", task.Date)
-	fmt.Printf("t: %s\n", t)
 	if err != nil {
 		return err
 	}
 
 	next, err := NextDate(now, task.Date, task.Repeat)
-	fmt.Printf("next: %s\n", next)
-	fmt.Printf("now: %s\n", now)
 	if err != nil {
 		return err
 	}
 
 	if afterNow(now.Truncate(24*time.Hour), t) {
-		fmt.Printf("afternow is %v\n", afterNow(now, t))
 		if len(task.Repeat) == 0 {
 			task.Date = now.Format("20060102")
 		} else {
@@ -87,6 +81,7 @@ func checkDate(task *db.Task) error {
 	}
 	return nil
 }
+
 func WriteJson(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
@@ -112,4 +107,61 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJson(w, TasksResp{
 		Tasks: tasks,
 	})
+}
+
+func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		SendError(w, "Не указан идентификатор", http.StatusBadRequest)
+		return
+	}
+	task, err := db.GetTask(id)
+	if err != nil {
+		SendError(w, "Задача не найдена", http.StatusNotFound)
+		return
+	}
+	WriteJson(w, task)
+}
+
+func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var task db.Task
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		SendError(w, "ошибка чтения тела запроса", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	err = json.Unmarshal(body, &task)
+	if err != nil {
+		SendError(w, "ошибка десереализации: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Проверяем, что заголовок не пустой
+	if checkTitleIsEmpty(&task) {
+		SendError(w, "заголовок не может быть пустым", http.StatusBadRequest)
+		return
+	}
+
+	err = checkDate(&task)
+	if err != nil {
+		SendError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id := task.ID
+	_, err = db.GetTask(id)
+	if err != nil {
+		SendError(w, "Задача не найдена", http.StatusNotFound)
+		return
+	}
+
+	err = db.UpdateTask(&task)
+	if err != nil {
+		SendError(w, "не удалось обновить задачу", http.StatusInternalServerError)
+		return
+	}
+	WriteJson(w, map[string]string{})
 }
