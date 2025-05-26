@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/sergeyanosov/go_todo_project/pkg/db"
 	"io"
@@ -163,5 +165,71 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		SendError(w, "не удалось обновить задачу", http.StatusInternalServerError)
 		return
 	}
+	WriteJson(w, map[string]string{})
+}
+
+func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		SendError(w, "не указан индентификатор", http.StatusBadRequest)
+		return
+	}
+
+	err := db.DeleteTask(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			SendError(w, "задача не найдена", http.StatusNotFound)
+			return
+		}
+		SendError(w, "ошибка удаления задачи: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	WriteJson(w, map[string]string{})
+}
+
+func TaskDoneHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+
+	if id == "" {
+		SendError(w, "не указан индентификатор", http.StatusBadRequest)
+		return
+	}
+
+	task, err := db.GetTask(id)
+	if err != nil {
+		SendError(w, "задача не найдена: ", http.StatusNotFound)
+		return
+	}
+
+	if len(task.Repeat) == 0 {
+		err := db.DeleteTask(id)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				SendError(w, "Задача не найдена", http.StatusNotFound)
+				return
+			}
+			SendError(w, "Ошибка удаления задачи", http.StatusInternalServerError)
+			return
+		}
+		WriteJson(w, map[string]string{})
+		return
+	}
+
+	date, err := NextDate(time.Now(), task.Date, task.Repeat)
+	if err != nil {
+		SendError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = db.UpdateDate(date, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			SendError(w, "задача не найдена", http.StatusNotFound)
+			return
+		}
+		SendError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	WriteJson(w, map[string]string{})
 }

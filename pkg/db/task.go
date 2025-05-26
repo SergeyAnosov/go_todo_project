@@ -68,3 +68,41 @@ func UpdateTask(task *Task) error {
 	}
 	return nil
 }
+
+func DeleteTask(id string) error {
+	query := `DELETE FROM scheduler WHERE id=?`
+
+	res, err := db.Exec(query, sql.Named("id", id))
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func UpdateDate(next string, id string) error {
+	query := "UPDATE scheduler SET date = ? WHERE id = ?"
+
+	res, err := db.Exec(query, next, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Запись не найдена
+	}
+
+	return nil
+}
