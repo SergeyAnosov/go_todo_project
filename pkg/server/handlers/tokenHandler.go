@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"io"
 	"net/http"
@@ -34,12 +35,14 @@ func SigninHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	iat := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"password_hash": password.Password, // можно хранить хэш, но в учебном примере — сам пароль
-		"exp":           time.Now().Add(8 * time.Hour).Unix(),
+		"password_hash": password.Password,
+		"exp":           iat,
 	})
 
-	signedToken, err := token.SignedString(([]byte(pwd)))
+	signedToken, err := token.SignedString([]byte(pwd))
 	if err != nil {
 		SendError(writer, "не удалось получить jwt token", http.StatusInternalServerError)
 	}
@@ -49,47 +52,42 @@ func SigninHandler(writer http.ResponseWriter, request *http.Request) {
 	})
 }
 
-func Auth(next http.HandlerFunc) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		expectedPassword := os.Getenv("PASSWORD")
-		if expectedPassword == "" {
-			next(writer, request)
-			return
+func Auth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Проверяем, установлен ли пароль
+		pass := os.Getenv("PASSWORD")
+		if len(pass) > 0 {
+			var jwtToken string
+
+			cookie, err := r.Cookie("token")
+			if err == nil {
+				jwtToken = cookie.Value
+			}
+
+			var valid bool
+
+			token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method")
+				}
+				return pass, nil
+			})
+
+			if err == nil && token.Valid {
+				claims, ok := token.Claims.(jwt.MapClaims)
+				if ok {
+					hash, ok := claims["password_hash"].(string)
+					if ok && hash == pass {
+						valid = true
+					}
+				}
+			}
+
+			if !valid {
+				http.Error(w, "Authentication required", http.StatusUnauthorized)
+				return
+			}
 		}
-
-		cookie, err := request.Cookie("token")
-		if err != nil {
-			SendError(writer, "требуется авторизация", http.StatusUnauthorized)
-			return
-		}
-		tokenString := cookie.Value
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return ([]byte)(expectedPassword), nil
-		})
-
-		if err != nil || !token.Valid {
-			SendError(writer, "invalid or missing token", http.StatusUnauthorized)
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			SendError(writer, "invalid token claims", http.StatusUnauthorized)
-			return
-		}
-
-		passwordHash, ok := claims["password_hash"].(string)
-		if !ok || passwordHash != expectedPassword {
-			SendError(writer, "authentification required", http.StatusUnauthorized)
-			return
-		}
-		next(writer, request)
-	}
-}
-
-func AsChiMiddleware(fn func(http.HandlerFunc) http.HandlerFunc) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(fn(next.ServeHTTP))
-	}
+		next.ServeHTTP(w, r)
+	})
 }
