@@ -98,6 +98,9 @@ type TasksResp struct {
 }
 
 func TasksHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(`Вызывается метод получения всех тасок`)
+	cookie, _ := r.Cookie("token")
+	fmt.Println("token in request", cookie)
 	tasks, err := db.Tasks(50) // в параметре максимальное количество записей
 	if err != nil {
 		// здесь вызываете функцию, которая возвращает ошибку в JSON

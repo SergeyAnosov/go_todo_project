@@ -35,11 +35,12 @@ func SigninHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	iat := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	iat := time.Now()
+	exp := iat.Add(8 * time.Hour)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"password_hash": password.Password,
-		"exp":           iat,
+		"exp":           exp.Unix(),
 	})
 
 	signedToken, err := token.SignedString([]byte(pwd))
@@ -54,40 +55,42 @@ func SigninHandler(writer http.ResponseWriter, request *http.Request) {
 
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем, установлен ли пароль
-		pass := os.Getenv("PASSWORD")
-		if len(pass) > 0 {
-			var jwtToken string
-
-			cookie, err := r.Cookie("token")
-			if err == nil {
-				jwtToken = cookie.Value
-			}
-
-			var valid bool
-
-			token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("unexpected signing method")
-				}
-				return pass, nil
-			})
-
-			if err == nil && token.Valid {
-				claims, ok := token.Claims.(jwt.MapClaims)
-				if ok {
-					hash, ok := claims["password_hash"].(string)
-					if ok && hash == pass {
-						valid = true
-					}
-				}
-			}
-
-			if !valid {
-				http.Error(w, "Authentication required", http.StatusUnauthorized)
-				return
-			}
+		expectedPassword := os.Getenv("PASSWORD")
+		if expectedPassword == "" {
+			next.ServeHTTP(w, r)
+			return
 		}
+
+		cookie, err := r.Cookie("token")
+		if err != nil {
+			http.Error(w, `{"error": "Authentication required"}`, http.StatusUnauthorized)
+			return
+		}
+
+		tokenStr := cookie.Value
+
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			return []byte(expectedPassword), nil
+		})
+
+		if err != nil || !token.Valid {
+			http.Error(w, `{"error": "Invalid or missing token"}`, http.StatusUnauthorized)
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, `{"error": "Invalid token claims"}`, http.StatusUnauthorized)
+			return
+		}
+
+		passwordHash, ok := claims["password_hash"].(string)
+		if !ok || passwordHash != expectedPassword {
+			http.Error(w, `{"error": "Authentication required"}`, http.StatusUnauthorized)
+			return
+		}
+
+		fmt.Println("Authentication successful!")
 		next.ServeHTTP(w, r)
 	})
 }
