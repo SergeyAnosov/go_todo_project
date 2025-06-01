@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -12,16 +14,17 @@ import (
 )
 
 func main() {
+	fmt.Println("Старт приложеия")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	currentDir, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 	webDir := currentDir + "/web"
-
-	err = godotenv.Load()
-	if err != nil {
-		return
-	}
 
 	err = db.Init(os.Getenv("DB_FILE"))
 	if err != nil {

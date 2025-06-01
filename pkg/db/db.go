@@ -38,8 +38,6 @@ func Init(dbFile string) error {
 		if err2 != nil {
 			panic("не удалось выполнить скрипт" + err2.Error())
 		}
-	} else {
 	}
-
 	return nil
 }

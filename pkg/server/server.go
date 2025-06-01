@@ -2,9 +2,10 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/sergeyanosov/go_todo_project/pkg/api"
-	"net/http"
 )
 
 func Run(webDir, url string, port int) error {
