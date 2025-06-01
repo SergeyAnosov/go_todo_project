@@ -12,6 +12,6 @@ func Run(webDir, url string, port int) error {
 	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(webDir))))
 	api.Init(r)
 	schema := fmt.Sprintf("%s:%d", url, port)
-	fmt.Printf("Запускаем сервер по адесу %s\n", schema)
+	fmt.Printf("Cервер запущен по адесу %s\n", schema)
 	return http.ListenAndServe(schema, r)
 }

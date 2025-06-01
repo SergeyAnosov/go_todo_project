@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 
 	_ "modernc.org/sqlite"
@@ -35,13 +34,11 @@ func Init(dbFile string) error {
 	}
 
 	if install {
-		fmt.Println("Базы не было, выполняем скрипт")
 		_, err2 := db.Exec(schema)
 		if err2 != nil {
 			panic("не удалось выполнить скрипт" + err2.Error())
 		}
 	} else {
-		fmt.Println("База уже существует. Продолжаем")
 	}
 
 	return nil

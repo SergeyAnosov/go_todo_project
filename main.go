@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -23,9 +22,8 @@ func main() {
 	if err != nil {
 		return
 	}
-	fmt.Printf("Файл .env успешно считан\n")
 
-	err = db.Init(os.Getenv("DB_PATH"))
+	err = db.Init(os.Getenv("DB_FILE"))
 	if err != nil {
 		panic(err)
 	}
@@ -37,8 +35,6 @@ func main() {
 
 	err1 := server.Run(webDir, os.Getenv("SERVER_ADDRESS"), port)
 	if err1 != nil {
-		fmt.Println("Завершаем работу")
-		fmt.Println(err1)
 		panic(err1)
 	}
 }

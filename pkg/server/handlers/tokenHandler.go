@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"io"
 	"net/http"
@@ -90,7 +89,6 @@ func Auth(next http.Handler) http.Handler {
 			return
 		}
 
-		fmt.Println("Authentication successful!")
 		next.ServeHTTP(w, r)
 	})
 }
