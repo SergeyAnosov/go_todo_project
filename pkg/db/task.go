@@ -39,15 +39,18 @@ func Tasks(limit int) ([]*Task, error) {
 		}
 		tasks = append(tasks, &task)
 	}
+	if err = rows.Err(); err != nil {
+		return []*Task{}, err
+	}
 	return tasks, nil
 }
 
 func GetTask(id string) (*Task, error) {
 	var task Task
-	err := db.QueryRow("SELECT * FROM scheduler WHERE id= :id", sql.Named("id", id)).
+	err := db.QueryRow("SELECT id, date, title, comment, repeat FROM scheduler WHERE id= :id", sql.Named("id", id)).
 		Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
 	if err != nil {
-		return &Task{}, err
+		return nil, err
 	}
 	return &task, nil
 }

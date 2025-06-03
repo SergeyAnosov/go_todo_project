@@ -5,9 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: todo-app
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${TODO_PORT}:${TODO_PORT}"
     volumes:
-      - ./db:/db
+      - ./db:/app/db
     env_file:
       - .env
     restart: unless-stopped
+volumes:
+  todo_data: {}

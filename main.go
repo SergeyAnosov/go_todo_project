@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Старт приложеия")
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
@@ -26,18 +25,29 @@ func main() {
 	}
 	webDir := currentDir + "/web"
 
-	err = db.Init(os.Getenv("DB_FILE"))
+	err = db.Init(os.Getenv("TODO_DB"))
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
-	port, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
-	if err != nil {
-		panic(err)
+	pass := os.Getenv("TODO_PASSWORD")
+	if pass == "" {
+		fmt.Println("password: ", pass)
 	}
 
-	err1 := server.Run(webDir, os.Getenv("SERVER_ADDRESS"), port)
-	if err1 != nil {
-		panic(err1)
+	portEnv := os.Getenv("TODO_PORT")
+	if portEnv == "" {
+		portEnv = "8080"
+	}
+	port, err := strconv.Atoi(portEnv)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = server.Run(webDir, os.Getenv("TODO_ADDRESS"), port)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 }

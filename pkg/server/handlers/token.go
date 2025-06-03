@@ -28,7 +28,7 @@ func SigninHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	pwd := os.Getenv("PASSWORD")
+	pwd := os.Getenv("TODO_PASSWORD")
 	if pwd != password.Password {
 		SendError(writer, "неверный пароль", http.StatusUnauthorized)
 		return
@@ -54,7 +54,7 @@ func SigninHandler(writer http.ResponseWriter, request *http.Request) {
 
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		expectedPassword := os.Getenv("PASSWORD")
+		expectedPassword := os.Getenv("TODO_PASSWORD")
 		if expectedPassword == "" {
 			next.ServeHTTP(w, r)
 			return

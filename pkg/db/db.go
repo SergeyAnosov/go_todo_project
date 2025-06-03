@@ -2,7 +2,9 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
@@ -21,22 +23,26 @@ CREATE TABLE scheduler (
 CREATE INDEX date_index ON scheduler (date);`
 
 func Init(dbFile string) error {
+	dir := filepath.Dir(dbFile)
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("не удалось создать папку %s: %v", dir, err)
+	}
+
 	_, err := os.Stat(dbFile)
+	install := os.IsNotExist(err)
 
-	var install bool
-	if err != nil {
-		install = true
+	var errOpen error
+	db, errOpen = sql.Open("sqlite", dbFile)
+	if errOpen != nil {
+		return fmt.Errorf("не удалось открыть/создать БД: %v", errOpen)
 	}
-
-	db, err = sql.Open("sqlite", dbFile)
-	if err != nil {
-		panic("Не удалось открыть/создать БД: " + err.Error())
-	}
+	defer db.Close()
 
 	if install {
-		_, err2 := db.Exec(schema)
-		if err2 != nil {
-			panic("не удалось выполнить скрипт" + err2.Error())
+		_, errSchema := db.Exec(schema)
+		if errSchema != nil {
+			return fmt.Errorf("не удалось выполнить скрипт создания схемы: %v", errSchema)
 		}
 	}
 	return nil

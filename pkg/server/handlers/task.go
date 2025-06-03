@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var layout = "20060102"
+
 func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 	var task db.Task
 
@@ -61,10 +63,11 @@ func checkTitleIsEmpty(task *db.Task) bool {
 
 func checkDate(task *db.Task) error {
 	now := time.Now()
+
 	if len(task.Date) == 0 {
-		task.Date = now.Format("20060102")
+		task.Date = now.Format(layout)
 	}
-	t, err := time.Parse("20060102", task.Date)
+	t, err := time.Parse(layout, task.Date)
 	if err != nil {
 		return err
 	}
@@ -76,7 +79,7 @@ func checkDate(task *db.Task) error {
 
 	if afterNow(now.Truncate(24*time.Hour), t) {
 		if len(task.Repeat) == 0 {
-			task.Date = now.Format("20060102")
+			task.Date = now.Format(layout)
 		} else {
 			task.Date = next
 		}
