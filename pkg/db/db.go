@@ -9,7 +9,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-var db *sql.DB
+var Db *sql.DB
 
 var schema string = `
 CREATE TABLE scheduler (
@@ -33,14 +33,13 @@ func Init(dbFile string) error {
 	install := os.IsNotExist(err)
 
 	var errOpen error
-	db, errOpen = sql.Open("sqlite", dbFile)
+	Db, errOpen = sql.Open("sqlite", dbFile)
 	if errOpen != nil {
 		return fmt.Errorf("не удалось открыть/создать БД: %v", errOpen)
 	}
-	defer db.Close()
 
 	if install {
-		_, errSchema := db.Exec(schema)
+		_, errSchema := Db.Exec(schema)
 		if errSchema != nil {
 			return fmt.Errorf("не удалось выполнить скрипт создания схемы: %v", errSchema)
 		}

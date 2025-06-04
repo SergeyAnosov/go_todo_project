@@ -16,7 +16,7 @@ type Task struct {
 func AddTask(task *Task) (int64, error) {
 	var id int64
 	query := "INSERT INTO scheduler(date, title, comment, repeat) VALUES (?, ?, ?, ?)"
-	res, err := db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
+	res, err := Db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
 	if err == nil {
 		id, err = res.LastInsertId()
 	}
@@ -25,7 +25,7 @@ func AddTask(task *Task) (int64, error) {
 
 func Tasks(limit int) ([]*Task, error) {
 	var tasks []*Task = make([]*Task, 0)
-	rows, err := db.Query("SELECT id, date, title, comment, repeat FROM scheduler LIMIT ?", limit)
+	rows, err := Db.Query("SELECT id, date, title, comment, repeat FROM scheduler LIMIT ?", limit)
 	if err != nil {
 		return []*Task{}, err
 	}
@@ -47,7 +47,7 @@ func Tasks(limit int) ([]*Task, error) {
 
 func GetTask(id string) (*Task, error) {
 	var task Task
-	err := db.QueryRow("SELECT id, date, title, comment, repeat FROM scheduler WHERE id= :id", sql.Named("id", id)).
+	err := Db.QueryRow("SELECT id, date, title, comment, repeat FROM scheduler WHERE id= :id", sql.Named("id", id)).
 		Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func GetTask(id string) (*Task, error) {
 func UpdateTask(task *Task) error {
 	query := `UPDATE scheduler SET date=?, title=?, comment=?, repeat=? WHERE id=?`
 
-	res, err := db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	res, err := Db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func UpdateTask(task *Task) error {
 func DeleteTask(id string) error {
 	query := `DELETE FROM scheduler WHERE id=?`
 
-	res, err := db.Exec(query, sql.Named("id", id))
+	res, err := Db.Exec(query, sql.Named("id", id))
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func DeleteTask(id string) error {
 func UpdateDate(next string, id string) error {
 	query := "UPDATE scheduler SET date = ? WHERE id = ?"
 
-	res, err := db.Exec(query, next, id)
+	res, err := Db.Exec(query, next, id)
 	if err != nil {
 		return err
 	}

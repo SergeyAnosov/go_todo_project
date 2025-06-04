@@ -6,11 +6,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/sergeyanosov/go_todo_project/pkg/server"
-
-	"github.com/sergeyanosov/go_todo_project/pkg/db"
-
 	"github.com/joho/godotenv"
+	"github.com/sergeyanosov/go_todo_project/pkg/db"
+	"github.com/sergeyanosov/go_todo_project/pkg/server"
 )
 
 func main() {
@@ -30,11 +28,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	pass := os.Getenv("TODO_PASSWORD")
-	if pass == "" {
-		fmt.Println("password: ", pass)
-	}
+	defer db.Db.Close()
 
 	portEnv := os.Getenv("TODO_PORT")
 	if portEnv == "" {
