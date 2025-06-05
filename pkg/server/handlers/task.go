@@ -13,6 +13,7 @@ import (
 )
 
 var layout = "20060102"
+var layoutForSearch = "02.01.2006"
 
 func AddTaskHandle(writer http.ResponseWriter, request *http.Request) {
 	var task db.Task
@@ -101,17 +102,48 @@ type TasksResp struct {
 }
 
 func TasksHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := db.Tasks(50) // в параметре максимальное количество записей
-	if err != nil {
-		// здесь вызываете функцию, которая возвращает ошибку в JSON
-		// её желательно было реализовать на предыдущем шаге
-		// ...
-		SendError(w, "ошибка получения всех задач", http.StatusInternalServerError)
-		return
+	param := getSearchParam(r)
+	data, isDate := parseData(param)
+	if param == "" {
+		tasks, err := db.Tasks(50) // в параметре максимальное количество записей
+		if err != nil {
+			// здесь вызываете функцию, которая возвращает ошибку в JSON
+			// её желательно было реализовать на предыдущем шаге
+			// ...
+			SendError(w, "ошибка получения всех задач", http.StatusInternalServerError)
+			return
+		}
+		WriteJson(w, TasksResp{
+			Tasks: tasks,
+		})
+	} else {
+		if !isDate {
+			byString, err := db.SearchByString(param)
+			if err != nil {
+				SendError(w, "ошибка получения задач по строке", http.StatusInternalServerError)
+				return
+			}
+			WriteJson(w, TasksResp{
+				Tasks: byString,
+			})
+		} else {
+			parsedDate, err := time.Parse(layoutForSearch, data)
+			if err != nil {
+				SendError(w, "неверный формат даты: %v", http.StatusBadRequest)
+				return
+			}
+
+			dbDate := parsedDate.Format(layout)
+			tasks, err := db.SearchByDate(dbDate)
+			if err != nil {
+				SendError(w, "ошибка получения задач по дате", http.StatusInternalServerError)
+				return
+			}
+			WriteJson(w, TasksResp{
+				Tasks: tasks,
+			})
+		}
 	}
-	WriteJson(w, TasksResp{
-		Tasks: tasks,
-	})
 }
 
 func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -235,4 +267,16 @@ func TaskDoneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJson(w, map[string]string{})
+}
+
+func getSearchParam(r *http.Request) string {
+	return r.URL.Query().Get("search")
+}
+
+func parseData(search string) (string, bool) {
+	date, err := time.Parse(layoutForSearch, search)
+	if err != nil {
+		return "", false
+	}
+	return date.Format(layoutForSearch), true
 }
