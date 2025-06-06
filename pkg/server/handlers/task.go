@@ -127,14 +127,7 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 				Tasks: byString,
 			})
 		} else {
-			parsedDate, err := time.Parse(layoutForSearch, data)
-			if err != nil {
-				SendError(w, "неверный формат даты: %v", http.StatusBadRequest)
-				return
-			}
-
-			dbDate := parsedDate.Format(layout)
-			tasks, err := db.SearchByDate(dbDate)
+			tasks, err := db.SearchByDate(data)
 			if err != nil {
 				SendError(w, "ошибка получения задач по дате", http.StatusInternalServerError)
 				return
@@ -278,5 +271,6 @@ func parseData(search string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	return date.Format(layoutForSearch), true
+
+	return date.Format(layout), true
 }

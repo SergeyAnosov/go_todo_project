@@ -135,6 +135,28 @@ func SearchByString(search string) ([]*Task, error) {
 	return tasks, nil
 }
 
+//func SearchByDate(date string) ([]*Task, error) {
+//	var tasks []*Task = make([]*Task, 0)
+//	query := "SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ?"
+//
+//	rows, err := Db.Query(query, date)
+//	if err != nil {
+//		return []*Task{}, err
+//	}
+//	defer rows.Close()
+//	for rows.Next() {
+//		var task Task
+//		if err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
+//			return []*Task{}, err
+//		}
+//		tasks = append(tasks, &task)
+//	}
+//	if err = rows.Err(); err != nil {
+//		return []*Task{}, err
+//	}
+//	return tasks, nil
+//}
+
 func SearchByDate(date string) ([]*Task, error) {
 	var tasks []*Task = make([]*Task, 0)
 	query := "SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ?"
