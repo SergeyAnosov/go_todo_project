@@ -1,0 +1,15 @@
+services:
+  todo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-app
+    ports:
+      - "${TODO_PORT}:${TODO_PORT}"
+    volumes:
+      - ./db:/app/db
+    env_file:
+      - .env
+    restart: unless-stopped
+volumes:
+  todo_data: {}
