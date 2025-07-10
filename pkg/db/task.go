@@ -3,14 +3,15 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Task struct {
-	ID      string `json:"id"`
-	Date    string `json:"date"`
-	Title   string `json:"title"`
-	Comment string `json:"comment"`
-	Repeat  string `json:"repeat"`
+	ID      int         `json:"id"`
+	Date    pgtype.Date `json:"date"`
+	Title   string      `json:"title"`
+	Comment string      `json:"comment"`
+	Repeat  string      `json:"repeat"`
 }
 
 func AddTask(task *Task) (int64, error) {

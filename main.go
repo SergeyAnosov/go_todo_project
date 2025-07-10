@@ -23,7 +23,7 @@ func main() {
 	}
 	webDir := currentDir + "/web"
 
-	err = db.Init(os.Getenv("TODO_DB"))
+	err = db.Init(os.Getenv("PG_DB"), os.Getenv("PG_USR"), os.Getenv("PG_PWD"))
 	if err != nil {
 		fmt.Println(err)
 		return

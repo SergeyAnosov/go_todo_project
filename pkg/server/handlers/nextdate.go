@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"github.com/jackc/pgx/v5/pgtype"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,16 +12,16 @@ import (
 
 var format = "20060102"
 
-func NextDate(now time.Time, dstart string, repeat string) (string, error) {
+func NextDate(now time.Time, dstart string, repeat string) (pgtype.Date, error) {
 	if len(repeat) == 0 {
-		return "", nil
+		return pgtype.Date{}, nil
 	}
 	if strings.Contains(repeat, "w ") || strings.Contains(repeat, "m ") {
-		return "", errors.New("не поддерживаемый формат")
+		return pgtype.Date{}, errors.New("не поддерживаемый формат")
 	}
 	date, err := time.Parse(format, dstart)
 	if err != nil {
-		return "", errors.New("не удалось распарсить dstart")
+		return pgtype.Date{}, errors.New("не удалось распарсить dstart")
 	}
 
 	split := strings.Split(repeat, " ")
@@ -33,14 +35,14 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 	case "d":
 		if len(split) == 1 {
-			return "", errors.New("не верный формат repeat")
+			return pgtype.Date{}, errors.New("не верный формат repeat")
 		}
 		days, err := strconv.Atoi(split[1])
 		if err != nil {
-			return "", err
+			return pgtype.Date{}, err
 		}
 		if days > 400 {
-			return "", nil
+			return pgtype.Date{}, nil
 		}
 		for {
 			date = date.AddDate(0, 0, days)
@@ -49,10 +51,18 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 		}
 	default:
-		return "", errors.New("не верный формат repeat")
+		return pgtype.Date{}, errors.New("не верный формат repeat")
 	}
 
-	return date.Format(format), nil
+	pgDate := pgtype.Date{}
+	err = pgDate.Scan(date)
+	if err != nil {
+		return pgtype.Date{}, errors.New("Что то пошло не так")
+	}
+
+	fmt.Printf("time.Time: %v\n", now.Format("2006-01-02"))
+	fmt.Printf("pgtype.Date: %v\n", pgDate)
+	return pgDate, nil
 }
 
 func afterNow(date, now time.Time) bool {

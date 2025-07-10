@@ -3,46 +3,23 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"os"
-	"path/filepath"
-
-	_ "modernc.org/sqlite"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var Db *sql.DB
 
-var schema string = `
-CREATE TABLE scheduler (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	date CHAR(8) NOT NULL DEFAULT "",
-	title VARCHAR(255) NOT NULL DEFAULT "",
-	comment TEXT NOT NULL DEFAULT "",
-	repeat VARCHAR(128) NOT NULL DEFAULT ""
-);
-
-CREATE INDEX date_index ON scheduler (date);`
-
-func Init(dbFile string) error {
-	dir := filepath.Dir(dbFile)
-
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("не удалось создать папку %s: %v", dir, err)
+func Init(databaseName, user, password string) error {
+	dsn := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s port=5432 sslmode=disable",
+		user, password, databaseName)
+	var err error
+	Db, err = sql.Open("pgx", dsn)
+	if err != nil {
+		return fmt.Errorf("не удалось подключиться к БД: %v", err)
+	}
+	if err := Db.Ping(); err != nil {
+		return fmt.Errorf("не удалось пингануть БД: %v", err)
 	}
 
-	_, err := os.Stat(dbFile)
-	install := os.IsNotExist(err)
-
-	var errOpen error
-	Db, errOpen = sql.Open("sqlite", dbFile)
-	if errOpen != nil {
-		return fmt.Errorf("не удалось открыть/создать БД: %v", errOpen)
-	}
-
-	if install {
-		_, errSchema := Db.Exec(schema)
-		if errSchema != nil {
-			return fmt.Errorf("не удалось выполнить скрипт создания схемы: %v", errSchema)
-		}
-	}
+	fmt.Println("Подключение к БД успешно")
 	return nil
 }
