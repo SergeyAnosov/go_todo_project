@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 )
 
 type Task struct {
@@ -113,11 +112,13 @@ func UpdateDate(next string, id string) error {
 
 func SearchByString(search string) ([]*Task, error) {
 	var tasks []*Task = make([]*Task, 0)
-	query := `SELECT id, date, title, comment, repeat FROM scheduler
-	WHERE LOWER(title) LIKE LOWER(?) OR LOWER(comment) LIKE LOWER(?)
-	ORDER BY date DESC`
+	//search = "%" + strings.ToLower(search) + "%"
 
-	rows, err := Db.Query(query, "%"+strings.ToLower(search)+"%", "%"+strings.ToLower(search)+"%")
+	query := `SELECT id, date, title, comment, repeat FROM scheduler
+        WHERE title LIKE ? COLLATE NOCASE OR comment LIKE ? COLLATE NOCASE
+        ORDER BY date DESC`
+
+	rows, err := Db.Query(query, "%"+search+"%", "%"+search+"%")
 	if err != nil {
 		return []*Task{}, err
 	}
@@ -134,28 +135,6 @@ func SearchByString(search string) ([]*Task, error) {
 	}
 	return tasks, nil
 }
-
-//func SearchByDate(date string) ([]*Task, error) {
-//	var tasks []*Task = make([]*Task, 0)
-//	query := "SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ?"
-//
-//	rows, err := Db.Query(query, date)
-//	if err != nil {
-//		return []*Task{}, err
-//	}
-//	defer rows.Close()
-//	for rows.Next() {
-//		var task Task
-//		if err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
-//			return []*Task{}, err
-//		}
-//		tasks = append(tasks, &task)
-//	}
-//	if err = rows.Err(); err != nil {
-//		return []*Task{}, err
-//	}
-//	return tasks, nil
-//}
 
 func SearchByDate(date string) ([]*Task, error) {
 	var tasks []*Task = make([]*Task, 0)
